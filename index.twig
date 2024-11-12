@@ -1,10 +1,9 @@
 {# Funeral Date #}
 {% for event in client.events %}
-    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" or event.eventType == "interment" %}
+    {% if event.eventType == "full-service-with-disposition" %}
         {% if event.startDate is not empty %}
-            {{ datetime(event.startDate, 'dddd, Do MMMM, YYYY' 'Europe/London') }}
+            {{ datetime(event.startDate, 'dddd, Do MMMM, YYYY', 'Europe/London') }}
         {% endif %}
-    {% endif %}
 {% endfor %}
 
 {# Time of Service #}
@@ -358,7 +357,6 @@
 	{% endif %}
 {% endfor %}
 
-
 {#Service Live Streamed - Yes#}
 {% for event in client.events %}
     {% if event.eventType == "full-service-with-disposition" or event.eventType == "full-service" or event.eventType == "disposition-cremation" %}
@@ -425,7 +423,7 @@
 {% for event in client.events %}
     {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
 		{% if event.serviceMusicSelections is not empty %}
-            {% for song in event.serviceMusicSelections if song.songUse == 'Time of Reflection' or song.songUse == "Hymn" or song.songUse == "Hymn 2" or song.songUse == "Hymn 3" %}
+            {% for song in event.serviceMusicSelections if song.songUse == 'Time of Reflection' %}
                     {{ song.trackName ~ " - " ~ song.artistName }}
                 {{ loop.last ? '' : ', ' }}
             {% endfor %}
@@ -862,7 +860,7 @@
 {# Order of Service Checkbox (Service Sheets) #}
 {% if client.events is not empty %}
     {% for event in client.events %}
-        {% if event.eventType == "interment" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+        {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
             {% if event.funeralOrderServiceRequired == "Yes" %}
                 {{ true }}
             {% endif %}
@@ -885,17 +883,7 @@
 {% if client.events is not empty %}
     {% for event in client.events %}
         {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.serviceCurtainInstructions == "Open" %}
-                {{ true }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.serviceCurtainInstructions == "Closed" %}
+            {% if event.serviceCurtainInstructions == "Closed" or event.serviceCurtainInstructions == "Voile" %}
                 {{ true }}
             {% endif %}
         {% endif %}
@@ -905,9 +893,9 @@
 {# Floral Tributes Arranged by #}
 {% if client.events is not empty %}
     {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.serviceCurtainInstructions == "Voile" %}
-                {{ Voile -}},
+        {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+            {% if event.serviceFloralTributes == "Yes" or event.serviceFloralTributes == "In Progress" or event.serviceFloralTributes == "Ordered" %}
+                {{ event.serviceFloralTributesArrangerBy }}
             {% endif %}
         {% endif %}
     {% endfor %}
@@ -1027,18 +1015,7 @@
     {% endif %}
 {% endfor %}
 
-{# Organist Checkbox #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.serviceOtherOptions == "Organist" %}
-                 {{ true }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Funeral Director #}
+{# Funeral Director name #}
 {% if client.arrangementArranger is not empty %}
     {{ client.arrangementArranger.firstName }} {{ client.arrangementArranger.lastName }}
 {% endif %}
@@ -1165,264 +1142,221 @@
 			{{ true }}
 		{% endif %}
 	{% endif %}
+{% endfor %}
+
+{# Checkbox for music not required #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+		{% if event.serviceMusicRequired == "No" %}
+			{{ true }}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Checkbox for sourced own music #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+		{% if event.serviceMusicRequired == "Sourced" %}
+			{{ true }}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Coffin weight in stone #}
+{% if client.casketWeightRange is not empty %}
+    {{ (client.casketWeightRange / 6350.29) | round(2) }}
 {% endif %}
 
-{# The start of Tom Moreton changes to the document #}
-
-{# Client Date of Death #}
-{% if client.clientDateOfDeath is not empty %}
-    {{ datetime(client.clientDateOfDeath, 'DD/MM/YYYY', 'Europe/London') }}
+{# Ashes to be scattered #}
+{% if client.cremationInterment is not empty and client.cremationInterment == "Scattered" %}
+    {{ true }}
 {% endif %}
 
-{# Checkbox for Full Service #}
+{# Ashes to be held  #}
+{% if client.ashesStatus is not empty and client.ashesStatus == "Held" %}
+    {{ true }}
+{% endif %}
+
+{# Executor Checkbox #}
+{% if client.callerIs is not empty and callerIs == "Executor" %}
+    {{ true }}
+{% endif %}
+
+{# Horsedrawn hearse checkmark #}
+{% set serviceEvent = null %}
+{% set horseDrawn = false %}
+
+{% if client.events is not empty %}
+  {% for event in client.events %}
+    {% if event.eventType == 'full-service-with-disposition' %}
+      {% set serviceEvent = event %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if serviceEvent._fleetLogistics is not empty %}
+  {% for logistic in serviceEvent._fleetLogistics %}
+    {% if logistic.horseDrawn == "Yes" %}
+      {% set horseDrawn = true %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if horseDrawn %}
+  {{ true }}
+{% endif %}
+
+{# Checkbox for Donations #}
 {% for event in client.events %}
     {% if event.eventType == "full-service-with-disposition" %}
-        {{ true }}
-    {% endif %}
+        {% if event.serviceDonations == "No" %}
+            {{ true }}
+        {% endif %}
+	{% endif %}
 {% endfor %}
 
-{# Checkbox for Direct/ Unattended Cremation #}
+{# Charity Name #}
 {% for event in client.events %}
-    {% if event.eventType == "disposition-cremation-unattended" %}
-        {{ true }}
-    {% endif %}
+    {% if event.eventType == "full-service-with-disposition" %}
+        {% if event.serviceCharity is not empty %}
+            {{ event.serviceCharity }}
+        {% endif %}
+	{% endif %}
 {% endfor %}
 
-{# yes/no statement to establish if the entry music is provided by Wesley Media #}
+{# Service Live Streamed #}
+{% for event in client.events %}
+    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" %}
+        {% if event.funeralServiceLiveStreamed is not empty %}
+            {{ event.funeralServiceLiveStreamed }}
+        {% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Visual Tribute #}
+{% for event in client.events %}
+    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" %}
+        {% if event.funeralServiceVisualTribute is not empty %}
+            {{ event.funeralServiceVisualTribute }}
+        {% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Checkbox for hearse #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" %}
+		{% if event.vehicleType == "Hearse" %}
+			{{ true }}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Music supplied by #}
 {% for event in client.events %}
     {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
         {% if event.serviceMusicSelections is not empty %}
-            {% for song in event.serviceMusicSelections if song.songUse == 'Entry' %}
-                {% if song.suppliedBy == "Wesley media" %}
-                    {{ "Yes" }}
-                {% else %}
-                    {{ "No" }}
+            {% for song in event.serviceMusicSelections %}
+                {% if song.suppliedBy == "Other" %}
+                    {{ true }}
                 {% endif %}
             {% endfor %}
         {% endif %}
     {% endif %}
 {% endfor %}
 
-{# Music artists name if the song type is Time of Reflection, Hymn, Hymn 2 or Hymn 3 #}
-{% for event in client.events %}
-{% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-	{% if event.serviceMusicSelections is not empty %}
-		{% for song in event.serviceMusicSelections if song.songUse == 'Time of Reflection' or song.songUse == "Hymn" or song.songUse == "Hymn 2" or song.songUse == "Hymn 3" %}
-            {% if song.artistName is not empty %}
-                {{ song.artistName ~ '\n' }}
-            {% else %}
-                {% if event.serviceOrganist is not empty and event.serviceOrganist.name is not empty %}
-                    {{ event.serviceOrganist.name ~ '\n' }}
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-	{% endif %}
-{% endif %}
-{% endfor %}
-
- {# Checkbox for organist #}
+{# Special Requests #}
 {% for event in client.events %}
     {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-        {% if event.serviceMusicSelections is not empty %}
-            {% if event.serviceOrganist is not empty %}
+		{% if event.serviceSpecialRequests is not empty %}
+			{{ event.serviceSpecialRequests }}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Additional Contact Title #}
+{% if client.additionalContacts is not empty %}
+    {{ client.0.title }}
+{% endif %}
+
+{# Additional Contact #}
+{% if client.additionalContacts is not empty %}
+    {{ printAddress(client.additionalContacts.0.address, 'un / li, su ci po') }}
+{% endif %}
+
+{# Additional Contact Phone Number #}
+{% if client.additionalContacts is not empty %}
+    {{ client.additionalContacts.0.contactEmail }}
+{% endif %}
+
+{# Public or Private Event #}
+{% for event in client.events %}
+    {% if event.eventType == "full-service-with-disposition" %}
+        {% if event.serviceType == "Public" %}
+            {{ true }}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{# Holding Photo Required #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+		{% if event.photoStatus == "Required" %}
+			{{ true }}
+	    {% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Slideshow with/without music #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+		{% if event.tributeOptions == "TimeSlideshowwithMusic" %}
+			{{ true }}
+	    {% endif %}
+	{% endif %}
+{% endfor %}
+
+{# Webcast Live #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
+        {% if event.funeralServiceLiveStreamed is not empty %}
+            {% if event.funeralServiceLiveStreamed == "Live" %}
                 {{ true }}
             {% endif %}
         {% endif %}
-    {% endif %}
-{% endfor %}
-
-{# Approximate Number Attending #}
-{% for event in client.events %}
-    {% if event.eventType == "full-service-with-disposition" or event.eventType == "full-service" or event.eventType == "disposition-cremation" %}
-        {% if event.approxNoAttending is not empty %}
-            {{ event.approxNoAttending }}
-        {% endif %}
-    {% endif %}
-{% endfor %}
-
-{# music track name and artist name if the song use is 'Other' #}
-{% for event in client.events %}
-    {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-		{% if event.serviceMusicSelections is not empty %}
-            {% for song in event.serviceMusicSelections if song.songUse == "Other" %}
-                    {{ song.trackName ~ " - " ~ song.artistName }}
-                {{ loop.last ? '' : ', ' }}
-            {% endfor %}
-        {% endif %}
 	{% endif %}
 {% endfor %}
 
-{# music track name and artist name if the song use is 'Hymn' #}
 {% for event in client.events %}
-    {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-	    {% if event.serviceMusicSelections is not empty %}
-		    {% for song in event.serviceMusicSelections if song.songUse == "Hymn" %}
-                {{ song.trackName ~ " - " ~ song.artistName }}
-		        {{ loop.last ? '' : ', ' }}
-            {% endfor %}
-	    {% endif %}
-    {% endif %}
-{% endfor %}
-
-{# Checkbox to tick if a Live Stream is either 'In Progress' or 'Booked' #}
-{% for event in client.events %}
-    {% if event.eventType == "full-service-with-disposition" or event.eventType == 'full-service' or event.eventType == "disposition-cremation" %}
-        {% if event.funeralServiceLiveStreamed == "Booked" or event.funeralServiceLiveStreamed == "In Progress" %}
-            {{ true }}
-        {% endif %}
-	{% endif %}
-{% endfor %}
-
-{# Checkbox to show visual tribute #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "full-service-with-disposition" %}
-            {% if event.funeralServiceVisualTribute != "No" %}
-             {{ true }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# checkbox to show 'visual/audio' recording of service #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "full-service-with-disposition" %}
-            {% if event.funeralServiceDVDRecording == "Yes" and event.visualAudioRecording == "Visual & Audio" %}
-             {{ true }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Checkbox to show 'Audio only' recording of service #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "full-service-with-disposition" %}
-            {% if event.funeralServiceDVDRecording == "Yes" and event.visualAudioRecording == "Audio Only" %}
-             {{ true }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Checkbox for Full Service #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service-with-disposition" %}
-            {{ true }}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Cremation Reference Number #}
-{% if client.cremationRef is not empty %}
-    {{ client.cremationRef }}
-{% endif %}
-
-{# Details of Cremation field #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service-with-disposition" or event.eventType == 'full-service' or event.eventType == "disposition-cremation" %}
-            {% if event.crematoriumPrepaidFundDetails is not empty %}
-                {{ event.crematoriumPrepaidFundDetails }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Service Sheet/Service Printing Yes/No Checkbox #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service-with-disposition" or event.eventType == 'interment' or event.eventType == "disposition-cremation" or event.eventType == "disposition-burial" %}
-            {% if event.funeralOrderServiceRequired == "Yes" %}
-                {{ "Yes" }}
-            {% elseif event.funeralOrderServiceRequired == "No" %}
-                {{ "No" }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-
-{% for event in client.events %}
-    {% if event.eventType == "interment" %}
-        {% if event.cemeteryName is not empty %}
-            {{ printAddress(event.cemeteryName.addresses, 'un / li, su ci po') }}
-        {% endif %}
-    {% endif %}
-{% endfor %}
-
-{% if client.maritalStatusAtTOD is not empty %}
-    {{ client.maritalStatusAtTOD }}
-{% endif %}
-
-{% for event in client.events %}
-    {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-	    {% if event.serviceMusicSelections is not empty %}
-		    {% for song in event.serviceMusicSelections if song.songUse == 'Other' %}
-                {{ song.songUseOther }}
-            {% endfor %}
-	    {% endif %}
-    {% endif %}
-{% endfor %}
-
-{# Date Applicant Collects Ashes #}
-{% if client.cremationCollectionDate is not empty %}
-    {{ datetime(client.cremationCollectionDate, "DD/MM/YYYY") }}
-{% endif %}
-
-{# Donation box/ plate required #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.donationBoxRequired is not empty %}
-                {% if event.donationBoxRequired == "Yes" %}
-                    {{ "Yes" }}
-                {% else %}
-                    {{ "No" }}
-                {% endif %}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Checkbox to remove Religious symbols #}
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service-with-disposition" %}
-            {% if event.religiousSymbolsToBeRemoved == "Yes" %}
-                {{ "Yes" }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
-
-{# Checkbox for Committal Service (In Burial or Cremation) #}
-{% if client.committalServiceRequired is not empty %}
-    {% if client.committalServiceRequired == "Yes" %}
+    {% if event.eventType == "disposition-cremation" %}
         {{ true }}
-    {% else %}
-        {{ false }}
     {% endif %}
-{% endif %}
+{% endfor %}
 
-{# Committal Instructions #}
-{% if client.committalServiceInstructions is not empty %}
-    {{ client.committalServiceInstructions }}
-{% endif %}
+{# Reopen #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" or event.eventType == "interment" %}
+		{% if event.graveCondition == "Re-open" %}
+			{{ true }}
+	    {% endif %}
+	{% endif %}
+{% endfor %}
 
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.serviceCurtainInstructions == "Open" %}
-                {{ "Yes" }}
-            {% elseif event.serviceCurtainInstructions == "Closed" %}
-                {{ "No" }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{% endif %}
+{# Grave New, Reserved, Re-Open Grave #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition"  or event.eventType == "interment" %}
+		{% if event.graveCondition is not empty %}
+			{{ event.graveCondition }}
+		{% endif %}
+	{% endif %}
+{% endfor %}
 
+{# Relationship of person already in the grave #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition"  or event.eventType == "interment" %}
+		{% if event.reopenPreviousDeceasedRelationship is not empty %}
+			{{ event.reopenPreviousDeceasedRelationship }}
+		{% endif %}
+	{% endif %}
+{% endfor %}
 
-
+{# Comment #}
