@@ -1,0 +1,665 @@
+{%- set timezone = 'Europe/London' -%}
+{%- set dateFormat = 'Do MMMM YYYY' -%}
+
+{%- if client.branch is not empty and (client.branch.address is not empty or client.branch.phone is not empty or client.branch.email is not empty or client.branch.website is not empty) -%}
+  {%- set useBranchDetails = true -%}
+{%- else -%}
+  {%- set useBranchDetails = false -%}
+{%- endif -%}
+
+{%- set funeralType -%}
+  [[client:funeral-type]]
+{%- endset -%}
+
+{%- set callerIsNOK = false -%}
+{%- set callerIsExec = false -%}
+{%- set callerIsINF = false -%}
+{%- set callerIsSpouse = false -%}
+{%- set callerIsApplicant = false -%}
+
+{%- if client.callerIs is not empty -%}
+  {%- for caller in client.callerIs -%}
+    {%- if caller == 'NOK' -%}
+      {%- set callerIsNOK = true -%}
+    {%- endif -%}
+    {%- if caller == 'Executor' -%}
+      {%- set callerIsExec = true -%}
+    {%- endif -%}
+    {%- if caller == 'Informant' -%}
+      {%- set callerIsINF = true -%}
+    {%- endif -%}
+    {%- if caller == 'Curr spouse' -%}
+      {%- set callerIsSpouse = true -%}
+    {%- endif -%}
+    {%- if caller == 'Applicant' -%}
+      {%- set callerIsApplicant = true -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- set NOKIsExec = false -%}
+{%- set NOKIsINF = false -%}
+{%- set NOKIsSpouse = false -%}
+{%- set NOKIsApplicant = false -%}
+
+{%- if client.nextOfKinIs is not empty -%}
+  {%- for NOK in client.nextOfKinIs -%}
+    {%- if NOK == 'Executor' -%}
+      {%- set NOKIsExec = true -%}
+    {%- endif -%}
+    {%- if NOK == 'Informant' -%}
+      {%- set NOKIsINF = true -%}
+    {%- endif -%}
+    {%- if NOK == 'Curr spouse' -%}
+      {%- set NOKIsSpouse = true -%}
+    {%- endif -%}
+    {%- if NOK == 'Applicant' -%}
+      {%- set NOKIsApplicant = true -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- set serviceEvent = null -%}
+{%- set cateringEvent = null -%}
+{%- set visitationEvent = null -%}
+{%- set coffinReception = null -%}
+{%- if client.events is not empty -%}
+  {%- for event in client.events -%}
+    {%- if event.eventType == 'full-service' or "burial" in event.eventType or "cremation" in event.eventType -%}
+      {%- set serviceEvent = event -%}
+    {%- endif -%}
+    {%- if event.eventType == 'catering' -%}
+      {%- set cateringEvent = event -%}
+    {%- endif -%}
+    {%- if event.eventType == 'viewing' -%}
+      {%- set visitationEvent = event -%}
+    {%- endif -%}
+    {%- if event.eventType == 'coffin-reception' -%}
+      {%- set coffinReception = event -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- set relationsMale = {'Aunt': 'Nephew','Brother': 'Brother','Brother-in-Law': 'Brother-in-Law','Counsin': 'Cousin','De Facto': 'Partner','Daughter': 'Father','Daughter-in-Law': 'Father','Son': 'Father','Son-in-Law': 'Father in Law','Executor': 'Client','Executrix': 'Client','Father': 'Son','Father-in-Law': 'Son in Law','Foster Child': 'Foster Parent','Foster Mother': 'Foster Mother','Friend': 'Friend','Funeral Director': 'Client','Goddaughter': 'Godfather','Godfather': 'Godson','Godmother': 'Godfather','Godson': 'Godfather','Granddaughter': 'Grandfather','Grandfather': 'Grandson','Grandmother': 'Grandson','Grandneice': 'Grand Uncle','Grandnephew': 'Grand Uncle','Grandson': 'Grandfather','Great Nephew': 'Great Uncle','Great Neice': 'Great Uncle','Great-Aunt': 'Great Nephew','Great-Granddaughter': 'Great Grandfather','Great-Grandson': 'Great Grandfather','Great-Uncle': 'Great Nephew','Guardian': 'Son','Half Brother': 'Half Brother','Half Sister': 'Half Brother','Husband': 'Husband','Mother': 'Son','Mother-in-Law': 'Son in Law','Nephew': 'Uncle','Niece': 'Uncle','Parent': 'Son','Step Brother': 'Step Brother','Step Daughter': 'Step Father','Step Father': 'Step Son','Step Mother': 'Step Son','Step Sister': 'Step Brother','Step Son': 'Step Father','Third Cousin': 'Third Cousin','Uncle': 'Nephew','Widdow': 'Partner','Wife': 'Husband'} -%}
+
+{%- set relationsFemale = {'Aunt': 'Niece','Brother': 'Sister','Brother-in-Law': 'Sister-in-Law','Counsin': 'Cousin','De Facto': 'Partner','Daughter': 'Mother','Daughter-in-Law': 'Mother','Son': 'Mother','Son-in-Law': 'Mother in Law','Executor': 'Client','Executrix': 'Client','Father': 'Daughter','Father-in-Law': 'Daughter in Law','Foster Child': 'Foster Parent','Foster Mother': 'Foster Mother','Friend': 'Friend','Funeral Director': 'Client','Goddaughter': 'Godmother','Godfather': 'Goddaughter','Godmother': 'Godmother','Godson': 'Godmother','Granddaughter': 'Grandmother','Grandfather': 'Granddaughter','Grandmother': 'Granddaughter','Grandneice': 'Grand Aunt','Grandnephew': 'Grand Aunt','Grandson': 'Grandmother','Great Nephew': 'Great Aunt','Great Neice': 'Great Aunt','Great-Aunt': 'Great Neice','Great-Granddaughter': 'Great Grandmother','Great-Grandson': 'Great Grandmother','Great-Uncle': 'Great Niece','Guardian': 'Daughter','Half Brother': 'Half Sister','Half Sister': 'Half Sister','Husband': 'Wife','Mother': 'Daughter','Mother-in-Law': 'Daughter in Law','Nephew': 'Aunt','Niece': 'Aunt','Parent': 'Daughter','Step Brother': 'Step Sister','Step Daughter': 'Step Mother','Step Father': 'Step Sister','Step Mother': 'Step Sister','Step Sister': 'Step Sister','Step Son': 'Step Mother','Third Cousin': 'Third Cousin','Uncle': 'Niece','Widdow': 'Partner','Wife': 'Wife'} -%}
+
+{%- set applicantRelationships -%}
+  {%- if NOKIsApplicant == true -%}
+    {%- if client.clientSex is not empty -%}
+      {%- if client.clientSex == 'Male' -%}
+        {{- client.nextOfKinGroup.0.relationshipToClient -}}
+      {%- elseif client.clientSex == 'Female' -%}
+        {{- client.nextOfKinGroup.0.relationshipToClient -}}
+      {%- endif -%}
+    {%- endif -%}
+  {%- elseif callerIsApplicant == true -%}
+    {%- if client.clientSex is not empty -%}
+      {%- if client.clientSex == 'Male' -%}
+        {{- client.firstCaller.0.relationshipToClient -}}
+      {%- elseif client.clientSex == 'Female' -%}
+        {{- client.firstCaller.0.relationshipToClient -}}
+      {%- endif -%}
+    {%- endif -%}
+  {%- else -%}
+
+    {%- if funeralType is not empty -%}
+      {%- set relation -%}
+        {%- if funeralType == 'Burial' -%}
+          [[client:burial-applicant:relationshipToClient]]
+        {%- elseif funeralType == 'Cremation' -%}
+          [[client:cremation-applicant:relationshipToClient]]
+        {%- endif -%}
+      {%- endset -%}
+      {%- if relation -%}
+        {%- if client.clientSex is not empty -%}
+          {%- if client.clientSex == 'Male' -%}
+            {{- relationsMale[relation] -}}
+          {%- elseif client.clientSex == 'Female' -%}
+            {{- relationsFemale[relation] -}}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endset -%}
+
+<main>
+  <div class="watermark" style="background-image: url('https://firebasestorage.googleapis.com/v0/b/fcrm-e17b0.appspot.com/o/_storage%2Fteam%2F-O3aQ9GkgPLXPQvbvJHC%2Fdisplay-image.jpg?alt=media&token=526601c4-9c78-4b38-b721-72b83d025453');"></div>
+  {# Page 2 #}
+  <div class="lora main-container" style="page-break-before:always; font-size:13px;">
+    <div style="display: flex;flex-direction: row; justify-content:space-between; margin-bottom: 60px;">
+      <div style="width: 60%;">
+        {% if callerIsINF or callerIsApplicant %}
+          {% if client.firstCaller.0.title is not empty %}
+            {{- ' ' ~ client.firstCaller.0.title -}}
+          {% endif %}
+          {% if client.firstCaller.0.firstName is not empty %}
+            {{- ' ' ~ client.firstCaller.0.firstName -}}
+          {% endif %}
+          {% if client.firstCaller.0.familyName is not empty %}
+            {{- ' ' ~ client.firstCaller.0.familyName -}}
+          {% endif %}
+        {% elseif client.informant is not empty %}
+          {% if client.informant.0.title is not empty %}
+            {{- ' ' ~ client.informant.0.title -}}
+          {% endif %}
+          {% if client.informant.0.firstName is not empty %}
+            {{- ' ' ~ client.informant.0.firstName -}}
+          {% endif %}
+          {% if client.informant.0.familyName is not empty %}
+            {{- ' ' ~ client.informant.0.familyName -}}
+          {% endif %}
+        {% elseif NOKIsINF or NOKIsApplicant %}
+          {% if client.nextOfKinGroup is not empty %}
+            {% if client.nextOfKinGroup.0.title is not empty %}
+              {{- ' ' ~ client.nextOfKinGroup.0.title -}}
+            {% endif %}
+            {% if client.nextOfKinGroup.0.firstName is not empty %}
+              {{- ' ' ~ client.nextOfKinGroup.0.firstName -}}
+            {% endif %}
+            {% if client.nextOfKinGroup.0.familyName is not empty %}
+              {{- ' ' ~ client.nextOfKinGroup.0.familyName -}}
+            {% endif %}
+          {% endif %}
+        {% endif %}
+        <br>
+        {% if callerIsINF or callerIsApplicant %}
+          {% if client.firstCaller.0.address.0 is not empty %}
+            {% if client.firstCaller.0.address.0.name is not empty %}
+              {{ client.firstCaller.0.address.0.name }}
+              <br>
+            {% endif %}
+            {% if client.firstCaller.0.address.0.line1 is not empty %}
+              {{ client.firstCaller.0.address.0.line1 }}
+              <br>
+            {% endif %}
+            {% if client.firstCaller.0.address.0.line2 is not empty %}
+              {{ client.firstCaller.0.address.0.line2 }}
+              <br>
+            {% endif %}
+            {% if client.firstCaller.0.address.0.city is not empty %}
+              {{ client.firstCaller.0.address.0.city }}
+              <br>
+            {% endif %}
+            {% if client.firstCaller.0.address.0.postcode is not empty %}
+              {{ client.firstCaller.0.address.0.postcode }}
+            {% endif %}
+          {% endif %}
+        {% elseif client.informant is not empty %}
+          {% if client.informant.0.address.0 is not empty %}
+            {% if client.informant.0.address.0.name is not empty %}
+              {{ client.informant.0.address.0.name }}
+              <br>
+            {% endif %}
+            {% if client.informant.0.address.0.unit is not empty %}
+              {{ client.informant.0.address.0.unit }}
+              <br>
+            {% endif %}
+            {% if client.informant.0.address.0.line1 is not empty %}
+              {{ client.informant.0.address.0.line1 }}
+              <br>
+            {% endif %}
+            {% if client.informant.0.address.0.line2 is not empty %}
+              {{ client.informant.0.address.0.line2 }}
+              <br>
+            {% endif %}
+            {% if client.informant.0.address.0.city is not empty %}
+              {{ client.informant.0.address.0.city }}
+              <br>
+            {% endif %}
+            {% if client.informant.0.address.0.postcode is not empty %}
+              {{ client.informant.0.address.0.postcode }}
+            {% endif %}
+          {% endif %}
+        {% elseif NOKIsINF or NOKIsApplicant %}
+          {% if client.nextOfKinGroup is not empty %}
+            {% if client.nextOfKinGroup.0.address is not empty %}
+              {% if client.nextOfKinGroup.0.address.name is not empty %}
+                {{ client.nextOfKinGroup.0.address.name }}
+                <br>
+              {% endif %}
+              {% if client.nextOfKinGroup.0.address.unit is not empty %}
+                {{ client.nextOfKinGroup.0.address.unit }}
+                <br>
+              {% endif %}
+              {% if client.nextOfKinGroup.0.address.line1 is not empty %}
+                {{ client.nextOfKinGroup.0.address.line1 }}
+                <br>
+              {% endif %}
+              {% if client.nextOfKinGroup.0.address.line2 is not empty %}
+                {{ client.nextOfKinGroup.0.address.line2 }}
+                <br>
+              {% endif %}
+              {% if client.nextOfKinGroup.0.address.city is not empty %}
+                {{ client.nextOfKinGroup.0.address.city }}
+                <br>
+              {% endif %}
+              {% if client.nextOfKinGroup.0.address.postcode is not empty %}
+                {{ client.nextOfKinGroup.0.address.postcode }}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      </div>
+      <div style="width: 40%;">
+        {{- datetime("now", "dddd, DD MMMM YYYY", "Europe/London") -}}
+        <br>
+        Our Ref: {{ quote.quoteNumber }}
+      </div>
+    </div>
+    <p style="text-align: center; font-size: 15px;">
+      <strong style="text-align:center;">
+        Service Estimate for the late  
+        {% if client.clientFamilyNameTitle is not empty %}
+          {{ client.clientFamilyNameTitle ~ " " }}
+        {% endif %}
+        {% if client.clientFirstGivenName is not empty %}
+          {{ client.clientFirstGivenName ~ " " }}
+        {% endif %}
+        {% if client.clientOtherGivenNames is not empty %}
+          {{ client.clientOtherGivenNames ~ " " }}
+        {% endif %}
+        {% if client.clientFamilyName is not empty %}
+          {{ client.clientFamilyName ~ " " }}
+        {% endif %}
+        {% if client.clientKnownAs is not empty %}
+          {{ "(" ~ client.clientKnownAs ~ ")" }}
+        {% endif %}
+      </strong>
+    </p>
+    <table style="width:100%;font-size: 13px ;color:#444444; padding-bottom:5px;">
+
+      {%- if quote.stock is not empty -%}
+        {% set professionalCharges = [] %}
+        {% set disburstments = [] %}
+        {%- set totalServicesCharges = 0 -%}
+        {%- set totalDisbursements = 0 -%}
+
+        {% for item in quote.stock %}
+          {% if "Disb" in item.options %}
+            {% set disburstments = disburstments|merge([item]) %}
+          {% else %}
+            {% set professionalCharges = professionalCharges|merge([item]) %}
+          {% endif %}
+        {% endfor %}
+
+        <!-- CHARGES FOR SERVICE -->
+        <tr>
+          <td colspan="4" style="width:100%;font-weight:bold;font-size:13px;text-align:left;">
+            Professional charges
+          </td>
+        </tr>
+
+        {%- for item in professionalCharges -%}
+          {%- set totalServicesCharges = totalServicesCharges + item.totalInclTax -%}
+          <tr>
+            <td style="width:70%;">
+              {%- if item.invoiceDescription is not empty -%}
+                {{- item.invoiceDescription|nl2br -}}
+              {%- elseif item.stock.invoiceDescription is not empty -%}
+                {{- item.stock.invoiceDescription|nl2br -}}
+              {%- else -%}
+                {{- item.stock.name -}}
+              {%- endif -%}
+            </td>
+            <td style="width:30%;text-align:right;">{{- '£' ~ item.totalInclTax|number_format(2, '.', ',' ) -}}</td>
+          </tr>
+        {%- endfor -%}
+
+        <tr>
+          <td style="width:70%; font-weight:bold; font-size:13px;">Total Estimated Funeral Service Price</td>
+          <td style="width:30%; text-align:right; font-weight:bold; font-size:13px;">{{- '£' ~ totalServicesCharges|number_format(2, '.', ',' ) -}}</td>
+        </tr>
+
+        <tr>
+          <td colspan="4" style="border-bottom: 1px solid #D3D3D3;"></td>
+        </tr>
+
+        <!-- DISBURSEMENTS -->
+        <tr>
+          <td colspan="4" style="width:100%;font-weight:bold;font-size:13px;padding-top:5px;">Third-Party Fees (Costs paid on your behalf)</td>
+        </tr>
+
+        {%- for item in disburstments -%}
+          {%- set totalDisbursements = totalDisbursements + item.totalInclTax -%}
+          <tr>
+            <td style="width:70%;">
+              {%- if item.invoiceDescription is not empty -%}
+                {{- item.invoiceDescription|nl2br -}}
+              {%- elseif item.stock.invoiceDescription is not empty -%}
+                {{- item.stock.invoiceDescription|nl2br -}}
+              {%- else -%}
+                {{- item.stock.name -}}
+              {%- endif -%}
+            </td>
+            <td style="width:30%;text-align:right;">{{- '£' ~ item.totalInclTax|number_format(2, '.', ',' ) -}}</td>
+          </tr>
+        {%- endfor -%}
+
+        <tr>
+          <td style="width:70%; font-weight:bold; font-size:13px;">Total Estimated Third-Party Fees</td>
+          <td style="width:30%; text-align:right; font-weight: bold;">{{- '£' ~ totalDisbursements|number_format(2, '.', ',' ) -}}</td>
+        </tr>
+
+        <tr>
+          <td colspan="4" style="border-bottom: 1px solid #D3D3D3;"></td>
+        </tr>
+
+        <tr>
+          <td style="width:70%; font-weight:bold; font-size:13px;">Total Estimated Costs Incl. VAT of £{{- (quote.tax)|number_format(2, '.', ',') -}}</td>
+          <td style="width:30%; text-align:right; font-weight:bold;">{{- '£' ~ (totalDisbursements + totalServicesCharges)|number_format(2, '.', ',' ) -}}</td>
+        </tr>
+      {%- endif -%}
+    </table>
+    <p style="text-align: center; font-size: 13px;">
+      <strong>THIS IS NOT AN ACCOUNT - ESTIMATE OF SERVICE CHARGES ONLY</strong>
+    </p>
+  </div>
+
+  {# Page 3 #}
+
+  <div class="lora main-container" style="page-break-before:always; font-size:13px;">
+    <p>
+      <strong>
+        Deposit Agreement
+      </strong>
+      <br>
+      I
+      {% if client.firstCaller is not empty and callerIsINF %}
+        {% if client.firstCaller.0.firstName is not empty %}
+          {{- ' ' ~ client.firstCaller.0.firstName -}}
+        {% endif %}
+        {% if client.firstCaller.0.familyName is not empty %}
+          {{- ' ' ~ client.firstCaller.0.familyName -}}
+        {% endif %}
+      {% elseif client.informant is not empty %}
+        {% if client.informant.0.firstName is not empty %}
+          {{- ' ' ~ client.informant.0.firstName -}}
+        {% endif %}
+        {% if client.informant.0.familyName is not empty %}
+          {{- ' ' ~ client.informant.0.familyName -}}
+        {% endif %}
+      {% elseif NOKIsINF or NOKIsApplicant %}
+        {% if client.nextOfKinGroup is not empty %}
+          {% if client.nextOfKinGroup.0.firstName is not empty %}
+            {{- ' ' ~ client.nextOfKinGroup.0.firstName -}}
+          {% endif %}
+          {% if client.nextOfKinGroup.0.familyName is not empty %}
+            {{- ' ' ~ client.nextOfKinGroup.0.familyName -}}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+      , agree to make payment of all the Third-Party Fees (costs paid on my behalf) 48 hours prior to the date of the service and ways in which payment can be made are enclosed. Should I wish to settle all the estimated costs by BACS or Debit Card, please deduct £50.00 as an advance payment discount.
+      
+      <br><br>
+      Discount does not apply to any outstanding amounts required for Pre-Paid Funeral Plans, Direct, Simple, or Home Funerals, where payment is due in full 48 hours before the date of cremation or burial.
+    </p>
+
+    <p>
+      <strong>
+        Payment Agreement
+      </strong>
+      <br>
+      I
+      {% if client.firstCaller is not empty and callerIsINF %}
+        {% if client.firstCaller.0.firstName is not empty %}
+          {{- ' ' ~ client.firstCaller.0.firstName -}}
+        {% endif %}
+        {% if client.firstCaller.0.familyName is not empty %}
+          {{- ' ' ~ client.firstCaller.0.familyName -}}
+        {% endif %}
+      {% elseif client.informant is not empty %}
+        {% if client.informant.0.firstName is not empty %}
+          {{- ' ' ~ client.informant.0.firstName -}}
+        {% endif %}
+        {% if client.informant.0.familyName is not empty %}
+          {{- ' ' ~ client.informant.0.familyName -}}
+        {% endif %}
+      {% elseif NOKIsINF or NOKIsApplicant %}
+        {% if client.nextOfKinGroup is not empty %}
+          {% if client.nextOfKinGroup.0.firstName is not empty %}
+            {{- ' ' ~ client.nextOfKinGroup.0.firstName -}}
+          {% endif %}
+          {% if client.nextOfKinGroup.0.familyName is not empty %}
+            {{- ' ' ~ client.nextOfKinGroup.0.familyName -}}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+      , agree to make final payment in receipt of the final invoice to Gallagher Family Funeral Directors all expenses associated with this service within 21 days. I agree to pay all costs associated with the collection process and recovery of any monies outstanding on this account should it fall outside of these terms. I accept full responsibility of the funeral account regardless of the outcome of any application to the Department of Work & Pensions (DWP).
+    </p>
+
+    <p>
+      <strong>
+        Information Given
+      </strong>
+      <br>
+      I
+      {% if client.firstCaller is not empty and callerIsINF %}
+        {% if client.firstCaller.0.firstName is not empty %}
+          {{- ' ' ~ client.firstCaller.0.firstName -}}
+        {% endif %}
+        {% if client.firstCaller.0.familyName is not empty %}
+          {{- ' ' ~ client.firstCaller.0.familyName -}}
+        {% endif %}
+      {% elseif client.informant is not empty %}
+        {% if client.informant.0.firstName is not empty %}
+          {{- ' ' ~ client.informant.0.firstName -}}
+        {% endif %}
+        {% if client.informant.0.familyName is not empty %}
+          {{- ' ' ~ client.informant.0.familyName -}}
+        {% endif %}
+      {% elseif NOKIsINF or NOKIsApplicant %}
+        {% if client.nextOfKinGroup is not empty %}
+          {% if client.nextOfKinGroup.0.firstName is not empty %}
+            {{- ' ' ~ client.nextOfKinGroup.0.firstName -}}
+          {% endif %}
+          {% if client.nextOfKinGroup.0.familyName is not empty %}
+            {{- ' ' ~ client.nextOfKinGroup.0.familyName -}}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+        confirm that I have the sole authority to arrange the funeral of the person mentioned above and have read and understood the Terms of Business. I understand that Gallagher Family Funeral Directors will communicate only with me regarding the arrangement of this funeral and subsequent details and that it is my responsibility to provide information to other family members or interested parties as required.
+    </p>
+
+    <div style="font-size: 13px;">
+      <table class="lora" style="font-size:13px; width: 100%;">
+        <tr>
+          <td class="table-bold">
+            I, 
+          </td>
+          <td>
+            {% if client.firstCaller is not empty and (callerIsINF or callerIsApplicant) %}
+              {% if client.firstCaller.0.firstName is not empty %}
+                {{- ' ' ~ client.firstCaller.0.firstName -}}
+              {% endif %}
+              {% if client.firstCaller.0.familyName is not empty %}
+                {{- ' ' ~ client.firstCaller.0.familyName -}}
+              {% endif %}
+            {% elseif client.informant is not empty %}
+              {% if client.informant.0.firstName is not empty %}
+                {{- ' ' ~ client.informant.0.firstName -}}
+              {% endif %}
+              {% if client.informant.0.familyName is not empty %}
+                {{- ' ' ~ client.informant.0.familyName -}}
+              {% endif %}
+            {% elseif NOKIsINF or NOKIsApplicant %}
+              {% if client.nextOfKinGroup is not empty %}
+                {% if client.nextOfKinGroup.0.firstName is not empty %}
+                  {{- ' ' ~ client.nextOfKinGroup.0.firstName -}}
+                {% endif %}
+                {% if client.nextOfKinGroup.0.familyName is not empty %}
+                  {{- ' ' ~ client.nextOfKinGroup.0.familyName -}}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="table-bold">
+            Relationship:
+          </td>
+          <td>
+            {% if applicantRelationships is not empty %}
+              {{ applicantRelationships }}
+            {%- endif -%}
+          </td>
+        </tr>
+  
+        <tr>
+          <td class="table-bold">
+            Phone:
+          </td>
+          <td>
+            {% if client.firstCaller is not empty and (callerIsINF or callerIsApplicant) %}
+              {% if client.firstCaller.0.contactPhoneNumber is not empty %}
+                {{- ' ' ~ client.firstCaller.0.contactPhoneNumber -}}
+              {% endif %}
+            {% elseif client.informant is not empty %}
+              {% if client.informant.0.contactPhoneNumber is not empty %}
+                {{- ' ' ~ client.informant.0.contactPhoneNumber -}}
+              {% endif %}
+            {% elseif NOKIsINF or NOKIsApplicant %}
+              {% if client.nextOfKinGroup is not empty %}
+                {% if client.nextOfKinGroup.0.contactPhoneNumber is not empty %}
+                  {{- ' ' ~ client.nextOfKinGroup.0.contactPhoneNumber -}}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="table-bold">
+            Mobile:
+          </td>
+          <td>
+            {% if client.firstCaller is not empty and (callerIsINF or callerIsApplicant) %}
+              {% if client.firstCaller.0.contactMobileNumber is not empty %}
+                {{- ' ' ~ client.firstCaller.0.contactMobileNumber -}}
+              {% endif %}
+            {% elseif client.informant is not empty %}
+              {% if client.informant.0.contactMobileNumber is not empty %}
+                {{- ' ' ~ client.informant.0.contactMobileNumber -}}
+              {% endif %}
+            {% elseif NOKIsINF or NOKIsApplicant %}
+              {% if client.nextOfKinGroup is not empty %}
+                {% if client.nextOfKinGroup.0.contactMobileNumber is not empty %}
+                  {{- ' ' ~ client.nextOfKinGroup.0.contactMobileNumber -}}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+      <table class="lora" style="font-size:13px; width: 100%;">
+        <tr>
+          <td class="table-bold">
+            Address:
+          </td>
+          <td>
+            {% if client.firstCaller is not empty and (callerIsINF or callerIsApplicant) %}
+              {% if client.firstCaller.0.address is not empty %}
+                {% if client.firstCaller.0.address.name is not empty %}
+                  {{ client.firstCaller.0.address.name }}
+                  <br>
+                {% endif %}
+                {% if client.firstCaller.0.address.0.unit is not empty %}
+                  {{ client.firstCaller.0.address.0.unit }}
+                  <br>
+                {% endif %}
+                {% if client.firstCaller.0.address.0.line1 is not empty %}
+                  {{ client.firstCaller.0.address.0.line1 }}
+                  <br>
+                {% endif %}
+                {% if client.firstCaller.0.address.0.line2 is not empty %}
+                  {{ client.firstCaller.0.address.0.line2 }}
+                  <br>
+                {% endif %}
+                {% if client.firstCaller.0.address.0.city is not empty %}
+                  {{ client.firstCaller.0.address.0.city }}
+                  <br>
+                {% endif %}
+                {% if client.firstCaller.0.address.0.postcode is not empty %}
+                  {{ client.firstCaller.0.address.0.postcode }}
+                {% endif %}
+              {% endif %}
+            {% elseif client.informant is not empty %}
+              {% if client.informant.0.address.0 is not empty %}
+                {% if client.informant.0.address.0.name is not empty %}
+                  {{ client.informant.0.address.0.name }}
+                  <br>
+                {% endif %}
+                {% if client.informant.0.address.0.unit is not empty %}
+                  {{ client.informant.0.address.0.unit }}
+                  <br>
+                {% endif %}
+                {% if client.informant.0.address.0.line1 is not empty %}
+                  {{ client.informant.0.address.0.line1 }}
+                  <br>
+                {% endif %}
+                {% if client.informant.0.address.0.line2 is not empty %}
+                  {{ client.informant.0.address.0.line2 }}
+                  <br>
+                {% endif %}
+                {% if client.informant.0.address.0.city is not empty %}
+                  {{ client.informant.0.address.0.city }}
+                  <br>
+                {% endif %}
+                {% if client.informant.0.address.0.postcode is not empty %}
+                  {{ client.informant.0.address.0.postcode }}
+                {% endif %}
+              {% endif %}
+            {% elseif NOKIsINF or NOKIsApplicant %}
+              {% if client.nextOfKinGroup is not empty %}
+                {% if client.nextOfKinGroup.0.address is not empty %}
+                  {% if client.nextOfKinGroup.0.address.name is not empty %}
+                    {{ client.nextOfKinGroup.0.address.name }}
+                    <br>
+                  {% endif %}
+                  {% if client.nextOfKinGroup.0.address.unit is not empty %}
+                    {{ client.nextOfKinGroup.0.address.unit }}
+                    <br>
+                  {% endif %}
+                  {% if client.nextOfKinGroup.0.address.line1 is not empty %}
+                    {{ client.nextOfKinGroup.0.address.line1 }}
+                    <br>
+                  {% endif %}
+                  {% if client.nextOfKinGroup.0.address.line2 is not empty %}
+                    {{ client.nextOfKinGroup.0.address.line2 }}
+                    <br>
+                  {% endif %}
+                  {% if client.nextOfKinGroup.0.address.city is not empty %}
+                    {{ client.nextOfKinGroup.0.address.city }}
+                    <br>
+                  {% endif %}
+                  {% if client.nextOfKinGroup.0.address.postcode is not empty %}
+                    {{ client.nextOfKinGroup.0.address.postcode }}
+                    <br>
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+  
+      <table class="lora" style="font-size:13px; width: 100%;">
+        <tr>
+          <td class="table-bold">Signature</td>
+          <td style="border-bottom: #444444 solid 1px;"> </td>
+        </tr>
+        <tr>
+          <td class="table-bold">Date</td>
+          <td style="width:20%;">{{ datetime("now", 'DD/MM/YYYY', "Europe/London") }}</td>
+        </tr>
+      </table>
+  
+      <p style="text-align: center; font-weight: bold; margin-top: 40px;">Preferred method of payment by BACS</p>
+      <p style="font-weight: bold; text-align:center;">
+        Barclays Bank
+        <br>
+        D P & A Gallagher Ltd
+        <br>
+        No. 10632252     Sort Code 20-45-14
+        <br>
+        <span style="font-style: italic;">(cheques not accepted)</span>
+      </p>
+    </div>
+  </div>
+</main>
