@@ -567,7 +567,7 @@
 
 {# Name of Officiating Minister/Officiant #}
 {% for event in client.events %}
-    {% if event.eventType == "full-service-with-disposition" or event.eventType == "interment" or event.eventType == "disposition-cremation" %}
+    {% if event.eventType == "full-service-with-disposition" or event.eventType == "interment" or event.eventType == "disposition-cremation" or event.eventType == "disposition-burial" %}
         {% if event.serviceClergyCelebrant is not empty %}
             {{ event.serviceClergyCelebrant.name }}
         {% endif %}
@@ -1604,17 +1604,11 @@
     {{ client.committalServiceInstructions }}
 {% endif %}
 
-{% if client.events is not empty %}
-    {% for event in client.events %}
-        {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-            {% if event.serviceCurtainInstructions == "Open" %}
-                {{ "Yes" }}
-            {% elseif event.serviceCurtainInstructions == "Closed" %}
-                {{ "No" }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
+
+{# DO NOT USE. Attempt at code that is not finished (convert millimetres to inches) #}
+{% if client.casketChosenCoffinCasket is not empty %}
+	{% if client.casketChosenCoffinCasket.width is not empty %}
+		{{ client.casketChosenCoffinCasket.width }}
+	{% endif %}
 {% endif %}
-
-
 
