@@ -4,6 +4,7 @@
         {% if event.startDate is not empty %}
             {{ datetime(event.startDate, 'dddd, Do MMMM, YYYY', 'Europe/London') }}
         {% endif %}
+    {% endif %}
 {% endfor %}
 
 {# Time of Service #}
@@ -585,7 +586,7 @@
 
 {# Name of crematorium  #}
 {% for event in client.events %}
-    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" %}
+    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" or event.eventType == "interment" %}
         {% if event.cremationCrematoriumName is not empty %}
             {{ event.cremationCrematoriumName.name }}
         {% endif %}
@@ -1536,29 +1537,6 @@
     {% endfor %}
 {% endif %}
 
-
-{% for event in client.events %}
-    {% if event.eventType == "interment" %}
-        {% if event.cemeteryName is not empty %}
-            {{ printAddress(event.cemeteryName.addresses, 'un / li, su ci po') }}
-        {% endif %}
-    {% endif %}
-{% endfor %}
-
-{% if client.maritalStatusAtTOD is not empty %}
-    {{ client.maritalStatusAtTOD }}
-{% endif %}
-
-{% for event in client.events %}
-    {% if event.eventType == "full-service" or event.eventType == "disposition-cremation" or event.eventType == "full-service-with-disposition" %}
-	    {% if event.serviceMusicSelections is not empty %}
-		    {% for song in event.serviceMusicSelections if song.songUse == 'Other' %}
-                {{ song.songUseOther }}
-            {% endfor %}
-	    {% endif %}
-    {% endif %}
-{% endfor %}
-
 {# Date Applicant Collects Ashes #}
 {% if client.cremationCollectionDate is not empty %}
     {{ datetime(client.cremationCollectionDate, "DD/MM/YYYY") }}
@@ -1605,10 +1583,78 @@
 {% endif %}
 
 
-{# DO NOT USE. Attempt at code that is not finished (convert millimetres to inches) #}
+{# Coffin Width in Inches #}
 {% if client.casketChosenCoffinCasket is not empty %}
 	{% if client.casketChosenCoffinCasket.width is not empty %}
-		{{ client.casketChosenCoffinCasket.width }}
+		{{ client.casketChosenCoffinCasket.width / 25.4 }}
 	{% endif %}
+{% endif %}
+
+{# Coffin Length in Inches #}
+{% if client.casketChosenCoffinCasket is not empty %}
+	{% if client.casketChosenCoffinCasket.length is not empty %}
+		{{ client.casketChosenCoffinCasket.length / 25.4 }}
+	{% endif %}
+{% endif %}
+
+{# Coffin Height in inches #}
+{% if client.casketChosenCoffinCasket is not empty %}
+	{% if client.casketChosenCoffinCasket.height is not empty %}
+		{{ client.casketChosenCoffinCasket.height / 25.4 }}
+	{% endif %}
+{% endif %}
+
+{# Checkbox To Indicate The Coffin Width Is Bigger Than 26 Inches #}
+{% if client.casketChosenCoffinCasket is not empty %}
+	{% if client.casketChosenCoffinCasket.width is not empty %}
+        {% if client.casketChosenCoffinCasket.width > 660.4 %}
+            {{ true }}
+        {% endif %}
+	{% endif %}
+{% endif %}
+
+ {# Text box 'Material Other' if 'Other' Material Selection Is Made #}
+{% if client.casketChosenCoffinCasket.material is not empty %}
+    {{ client.casketChosenCoffinCasket.material }}
+{% endif %}
+
+{# If Coffin Weighs More Than 140kg, Print Coffin Weight in kg #}
+{% if client.casketChosenCoffinCasket is not empty %}
+	{% if client.casketChosenCoffinCasket.weight is not empty %}
+        {% if client.casketChosenCoffinCasket.weight > 140000 %}
+            {{ client.casketChosenCoffinCasket.weight / 1000 ~ "kg" }}
+        {% endif %}
+	{% endif %}
+{% endif %}
+
+{# Revised checkbox for 'Full Service' Event #}
+{% for event in client.events %}
+    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" %}
+        {% if event.funeralServiceLocationType == "Full Service and Burial" or event.funeralServiceLocationType == "Church Service with Burial" or event.funeralServiceLocationType == "Church Service with Cremation" or event.funeralServiceLocationType == "Direct Burial" or event.funeralServiceLocationType == "Direct Cremation" or event.funeralServiceLocationType == "Memorial" or event.funeralServiceLocationType == "Service and Cremation" or event.funeralServiceLocationType == "In House Service with Burial" or event.funeralServiceLocationType == "In House Service with Cremation" or event.funeralServiceLocationType == "In House Service with Direct Cremation" %}
+            {{ true }}
+        {% endif %}
+	{% endif %}
+{% endfor %}
+
+{% if client.events is not empty %}
+	{% for event in client.events %}
+        {% if event.eventType == "full-service-with-disposition" %}
+            {{ "Full Service" }}
+        {% elseif client.committalServiceRequired is not empty %}
+            {% if client.committalServiceRequired == "Yes" %}
+                {{ "Commital" }}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+
+
+{% if client.committalServiceRequired is not empty %}
+    {% if client.committalServiceRequired == "Yes" %}
+        {{ true }}
+    {% else %}
+        {{ false }}
+    {% endif %}
 {% endif %}
 
