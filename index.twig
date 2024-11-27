@@ -1009,7 +1009,7 @@
 
 {# Cremation/reference Number #}
 {% for event in client.events %}
-    {% if event.eventType == "full-service-with-disposition" or event.eventType == "disposition-cremation" %}
+    {% if event.eventType == "full-service-with-disposition" or event.eventType == "full-service" or event.eventType == "disposition-cremation" %}
         {% if event.cremationRefNumber is not empty %}
             {{ event.cremationRefNumber }}
         {% endif %}
