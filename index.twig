@@ -1658,3 +1658,62 @@
     {% endif %}
 {% endif %}
 
+{# Cemetery Name in a Burial Event #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-burial" or event.eventType == "full-service" %}
+        {% if event.cemeteryName is not empty %}
+            {{ event.cemeteryName.name }}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{# Grave Number in Burial Event #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-burial" or event.eventType == "full-service" %}
+        {% if event.cemeteryGraveNo is not empty %}
+            {{ event.cemeteryGraveNo }}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{# Location of deceased #}
+{% if client.firstCallLocationOfDeceased is not empty %}
+    {{ printAddress(client.firstCallLocationOfDeceased, 'un / li, su ci po') }}
+{% endif %}
+
+{# Grave Type in Burial event #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-burial" or event.eventType == "full-service" %}
+        {% if event.graveCondition is not empty %}
+            {% if event.graveCondition == "New" %}
+                {{ true }}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{# Grave Depth in Burial event #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-burial" or event.eventType == "full-service" %}
+        {% if event.cemeteryGraveType is not empty %}
+            {% if event.cemeteryGraveType == "Double Depth" %}
+                {{ true }}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{# Monument/ Memorial removal option checkbox #}
+{% for event in client.events %}
+    {% if event.eventType == "disposition-burial" or event.eventType == "full-service" %}
+        {% if event.reopenMonumentRemove is not empty %}
+            {% if event.reopenMonumentRemove == "Yes" %}
+                {{ true }}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{% if client.chosenAshUrns is not empty %}
+    {{ true }}
+{% endif %}
